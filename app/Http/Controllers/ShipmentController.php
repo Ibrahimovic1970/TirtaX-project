@@ -1,11 +1,9 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Mail\ShipmentStatusUpdateMail;
 use App\Models\Shipment;
 use App\Models\ShipmentHistory;
-use App\Mail\PaymentSuccessMail;
-use App\Mail\ShipmentStatusUpdateMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -42,14 +40,14 @@ class ShipmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'origin_city' => 'required|string|max:100',
+            'origin_city'      => 'required|string|max:100',
             'destination_city' => 'required|string|max:100',
-            'receiver_name' => 'required|string|max:100',
-            'receiver_phone' => 'required|string|max:20',
+            'receiver_name'    => 'required|string|max:100',
+            'receiver_phone'   => 'required|string|max:20',
             'receiver_address' => 'required|string',
-            'weight' => 'required|numeric|min:0.1',
-            'service_type' => 'required|in:REGULER,EKONOMI,EXPRESS,SAMEDAY',
-            'total_cost' => 'required|numeric|min:1000',
+            'weight'           => 'required|numeric|min:0.1',
+            'service_type'     => 'required|in:REGULER,EKONOMI,EXPRESS,SAMEDAY',
+            'total_cost'       => 'required|numeric|min:1000',
         ]);
 
         // Validasi tarif dari database (security check)
@@ -59,7 +57,7 @@ class ShipmentController extends Controller
             $request->service_type
         );
 
-        if (!$rate) {
+        if (! $rate) {
             return back()->with('error', 'Maaf, tarif untuk rute ini belum tersedia. Silakan hubungi admin.')
                 ->withInput();
         }
@@ -74,22 +72,22 @@ class ShipmentController extends Controller
         }
 
         $shipment = Shipment::create([
-            'user_id' => Auth::id(),
-            'origin_city' => $request->origin_city,
+            'user_id'          => Auth::id(),
+            'origin_city'      => $request->origin_city,
             'destination_city' => $request->destination_city,
-            'receiver_name' => $request->receiver_name,
-            'receiver_phone' => $request->receiver_phone,
+            'receiver_name'    => $request->receiver_name,
+            'receiver_phone'   => $request->receiver_phone,
             'receiver_address' => $request->receiver_address,
-            'weight' => $request->weight,
-            'total_cost' => $calculatedCost, // Gunakan kalkulasi server
-            'status' => 'created',
+            'weight'           => $request->weight,
+            'total_cost'       => $calculatedCost, // Gunakan kalkulasi server
+            'status'           => 'created',
         ]);
 
         ShipmentHistory::create([
             'shipment_id' => $shipment->id,
-            'status' => 'created',
+            'status'      => 'created',
             'description' => 'Pesanan berhasil dibuat. Menunggu pembayaran.',
-            'location' => 'Sistem TirtaX',
+            'location'    => 'Sistem TirtaX',
         ]);
 
         return redirect()->route('tracking.show', $shipment->tracking_number)
@@ -103,7 +101,7 @@ class ShipmentController extends Controller
     {
         $shipment = Shipment::with('histories')->where('tracking_number', $trackingNumber)->first();
 
-        if (!$shipment) {
+        if (! $shipment) {
             return view('shipments.track', ['error' => 'Nomor resi tidak ditemukan.']);
         }
 
@@ -137,9 +135,9 @@ class ShipmentController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:created,paid,picked_up,in_transit,delivered,cancelled',
+            'status'      => 'required|in:created,paid,picked_up,in_transit,delivered,cancelled',
             'description' => 'required|string',
-            'location' => 'nullable|string',
+            'location'    => 'nullable|string',
         ]);
 
         $shipment = Shipment::findOrFail($id);
@@ -147,9 +145,9 @@ class ShipmentController extends Controller
 
         ShipmentHistory::create([
             'shipment_id' => $shipment->id,
-            'status' => $request->status,
+            'status'      => $request->status,
             'description' => $request->description,
-            'location' => $request->location ?: 'Sistem TirtaX',
+            'location'    => $request->location ?: 'Sistem TirtaX',
         ]);
 
         return redirect()->route('shipments.index')->with('success', 'Status pengiriman berhasil diupdate!');
@@ -191,7 +189,7 @@ class ShipmentController extends Controller
             ->firstOrFail();
 
         // Hanya bisa download invoice jika sudah dibayar
-        if (!in_array($shipment->status, ['paid', 'picked_up', 'in_transit', 'delivered'])) {
+        if (! in_array($shipment->status, ['paid', 'picked_up', 'in_transit', 'delivered'])) {
             return back()->with('error', 'Invoice hanya tersedia setelah pembayaran dilakukan.');
         }
 
@@ -218,12 +216,12 @@ class ShipmentController extends Controller
         }
 
         $request->validate([
-            'rating' => 'required|integer|between:1,5',
+            'rating'   => 'required|integer|between:1,5',
             'feedback' => 'nullable|string|max:500',
         ]);
 
         $shipment->update([
-            'rating' => $request->rating,
+            'rating'   => $request->rating,
             'feedback' => $request->feedback,
         ]);
 
@@ -254,9 +252,9 @@ class ShipmentController extends Controller
         // Catat history
         ShipmentHistory::create([
             'shipment_id' => $shipment->id,
-            'status' => 'cancelled',
+            'status'      => 'cancelled',
             'description' => 'Pengiriman dibatalkan oleh customer. Alasan: ' . $request->cancel_reason,
-            'location' => 'Customer Panel',
+            'location'    => 'Customer Panel',
         ]);
 
         return redirect()->route('shipments.detail', $shipment->id)
@@ -274,9 +272,9 @@ class ShipmentController extends Controller
             ->get();
 
         $stats = [
-            'total' => Shipment::where('user_id', Auth::id())->count(),
-            'pending' => Shipment::where('user_id', Auth::id())->where('status', 'created')->count(),
-            'process' => Shipment::where('user_id', Auth::id())->whereIn('status', ['paid', 'picked_up', 'in_transit'])->count(),
+            'total'     => Shipment::where('user_id', Auth::id())->count(),
+            'pending'   => Shipment::where('user_id', Auth::id())->where('status', 'created')->count(),
+            'process'   => Shipment::where('user_id', Auth::id())->whereIn('status', ['paid', 'picked_up', 'in_transit'])->count(),
             'delivered' => Shipment::where('user_id', Auth::id())->where('status', 'delivered')->count(),
         ];
 
@@ -288,86 +286,110 @@ class ShipmentController extends Controller
      */
     public function showPayment($id)
     {
-        $shipment = Shipment::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $shipment = Shipment::findOrFail($id);
 
-        if (!in_array($shipment->status, ['created', 'cancelled'])) {
-            return redirect()->route('shipments.my')
-                ->with('error', 'Pengiriman ini sudah dalam proses atau sudah dibayar.');
+        // Check authorization
+        if (Auth::user()->role === 'customer' && $shipment->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access.');
         }
 
-        // Konfigurasi Midtrans
-        \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
-        \Midtrans\Config::$isProduction = config('services.midtrans.is_production');
-        \Midtrans\Config::$isSanitized = config('services.midtrans.is_sanitized');
-        \Midtrans\Config::$is3ds = config('services.midtrans.is_3ds');
+        // Check if payment is needed
+        if ($shipment->status !== 'created' && $shipment->status !== 'pending') {
+            return redirect()->route('shipments.detail', $shipment->id)
+                ->with('error', 'Pengiriman ini sudah dibayar atau tidak memerlukan pembayaran.');
+        }
 
-        // Order ID unik dengan timestamp agar tidak bentrok
-        $uniqueOrderId = $shipment->tracking_number . '-' . time();
+        // Check if Midtrans keys are configured
+        if (! config('midtrans.server_key') || ! config('midtrans.client_key')) {
+            return redirect()->route('shipments.detail', $shipment->id)
+                ->with('error', 'Payment gateway belum dikonfigurasi. Silakan hubungi administrator.');
+        }
 
+        // Setup Midtrans configuration
+        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        \Midtrans\Config::$isSanitized  = config('midtrans.is_sanitized');
+        \Midtrans\Config::$is3ds        = config('midtrans.is_3ds');
+
+        // Generate UNIQUE order_id untuk setiap transaksi
+        $uniqueOrderId = $shipment->tracking_number . '-' . time() . '-' . substr(md5(uniqid()), 0, 6);
+
+        // Prepare Midtrans transaction parameters
         $params = [
             'transaction_details' => [
-                'order_id' => $uniqueOrderId,
+                'order_id'     => $uniqueOrderId,
                 'gross_amount' => (int) $shipment->total_cost,
             ],
-            'customer_details' => [
-                'first_name' => Auth::user()->name,
-                'email' => Auth::user()->email,
-                'phone' => Auth::user()->phone ?? '-',
+            'customer_details'    => [
+                'first_name' => $shipment->receiver_name ?? Auth::user()->name,
+                'email'      => Auth::user()->email,
+                'phone'      => $shipment->receiver_phone ?? '',
             ],
-            'item_details' => [
+            'item_details'        => [
                 [
-                    'id' => 'SHIPPING-' . $shipment->id,
-                    'price' => (int) $shipment->total_cost,
+                    'id'       => 'SHIPPING-' . $shipment->id,
+                    'price'    => (int) $shipment->total_cost,
                     'quantity' => 1,
-                    'name' => 'Biaya Pengiriman',
+                    'name'     => 'Jasa Pengiriman ' . $shipment->origin_city . ' - ' . $shipment->destination_city,
                 ],
             ],
-            'custom_field1' => $shipment->tracking_number,
-            'custom_field2' => 'TirtaX Shipment',
         ];
 
         try {
+            // Get Snap Payment Page URL
             $snapToken = \Midtrans\Snap::getSnapToken($params);
 
-            $error = request()->has('error')
-                ? 'Pembayaran dibatalkan atau gagal. Silakan coba lagi.'
-                : null;
+            // Store the unique order_id in session
+            session(['midtrans_order_id' => $uniqueOrderId]);
 
-            return view('shipments.payment', compact('shipment', 'snapToken', 'error'));
+            return view('shipments.payment', compact('shipment', 'snapToken', 'uniqueOrderId'));
         } catch (\Exception $e) {
-            Log::error('Midtrans Error: ' . $e->getMessage());
-            return back()->with('error', 'Gagal menghubungi payment gateway: ' . $e->getMessage());
+            \Log::error('Midtrans Error: ' . $e->getMessage());
+
+            $errorMessage = $e->getMessage();
+
+            if (strpos($errorMessage, 'order_id has already been taken') !== false) {
+                $errorMessage = 'Order ID sudah digunakan. Silakan refresh halaman dan coba lagi.';
+            } elseif (strpos($errorMessage, '401') !== false || strpos($errorMessage, 'unauthorized') !== false) {
+                $errorMessage = 'Server Key atau Client Key tidak valid. Silakan periksa konfigurasi Midtrans Anda.';
+            } elseif (strpos($errorMessage, '400') !== false) {
+                $errorMessage = 'Parameter transaksi tidak valid. Silakan coba lagi.';
+            }
+
+            return redirect()->route('shipments.detail', $shipment->id)
+                ->with('error', 'Gagal menghubungi payment gateway: ' . $errorMessage);
         }
     }
 
-    /**
-     * Handle redirect setelah pembayaran sukses
-     */
+/**
+ * Payment success callback
+ */
     public function paymentSuccess($id)
     {
-        $shipment = Shipment::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $shipment = Shipment::findOrFail($id);
 
-        // Update status jika belum paid (fallback jika webhook belum jalan)
+        // Update status to paid (manual update untuk memastikan status berubah)
         if ($shipment->status !== 'paid') {
-            $shipment->update(['status' => 'paid']);
-
-            ShipmentHistory::create([
-                'shipment_id' => $shipment->id,
+            $shipment->update([
                 'status' => 'paid',
-                'description' => 'Pembayaran berhasil dikonfirmasi.',
-                'location' => 'Payment Gateway',
             ]);
 
-            // Kirim email notifikasi
+            // Add tracking history
             try {
-                Mail::to($shipment->user->email)->send(new PaymentSuccessMail($shipment));
+                \App\Models\ShipmentTracking::create([
+                    'shipment_id' => $shipment->id,
+                    'status'      => 'paid',
+                    'description' => 'Pembayaran berhasil dikonfirmasi melalui Midtrans',
+                    'location'    => 'Sistem Pembayaran',
+                    'tracked_at'  => now(),
+                ]);
             } catch (\Exception $e) {
-                Log::error('Gagal kirim email: ' . $e->getMessage());
+                \Log::error('Failed to create tracking history: ' . $e->getMessage());
+                // Jangan throw error, biarkan proses tetap berjalan
             }
         }
 
-        return redirect()->route('shipments.my')
-            ->with('success', 'Pembayaran berhasil! Email konfirmasi telah dikirim.');
+        return view('shipments.payment-success', compact('shipment'));
     }
 
     /**
@@ -386,9 +408,9 @@ class ShipmentController extends Controller
 
         // Hitung statistik
         $stats = [
-            'total' => $tasks->count(),
-            'paid' => $tasks->where('status', 'paid')->count(),
-            'picked_up' => $tasks->where('status', 'picked_up')->count(),
+            'total'      => $tasks->count(),
+            'paid'       => $tasks->where('status', 'paid')->count(),
+            'picked_up'  => $tasks->where('status', 'picked_up')->count(),
             'in_transit' => $tasks->where('status', 'in_transit')->count(),
         ];
 
@@ -421,10 +443,10 @@ class ShipmentController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|in:picked_up,in_transit,delivered',
+            'status'      => 'required|in:picked_up,in_transit,delivered',
             'description' => 'required|string',
-            'location' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'location'    => 'nullable|string',
+            'photo'       => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $shipment = Shipment::where('id', $id)
@@ -433,26 +455,26 @@ class ShipmentController extends Controller
 
         // Validasi transisi status
         $allowedTransitions = [
-            'paid' => ['picked_up'],
-            'picked_up' => ['in_transit'],
+            'paid'       => ['picked_up'],
+            'picked_up'  => ['in_transit'],
             'in_transit' => ['delivered'],
         ];
 
-        if (!in_array($request->status, $allowedTransitions[$shipment->status] ?? [])) {
+        if (! in_array($request->status, $allowedTransitions[$shipment->status] ?? [])) {
             return back()->with('error', 'Transisi status tidak valid.');
         }
 
         // Handle upload foto
         $photoUrl = null;
         if ($request->hasFile('photo')) {
-            $photo = $request->file('photo');
+            $photo    = $request->file('photo');
             $filename = 'pod_' . time() . '_' . $shipment->tracking_number . '.' . $photo->getClientOriginalExtension();
             $photo->move(public_path('uploads/pod'), $filename);
             $photoUrl = '/uploads/pod/' . $filename;
         }
 
         // WAJIB upload foto saat status delivered
-        if ($request->status === 'delivered' && !$photoUrl) {
+        if ($request->status === 'delivered' && ! $photoUrl) {
             return back()->with('error', 'Upload foto bukti pengiriman WAJIB saat status Delivered.');
         }
 
@@ -462,10 +484,10 @@ class ShipmentController extends Controller
         // Catat history
         $history = ShipmentHistory::create([
             'shipment_id' => $shipment->id,
-            'status' => $request->status,
+            'status'      => $request->status,
             'description' => $request->description,
-            'location' => $request->location ?: 'Lokasi Kurir',
-            'photo_url' => $photoUrl,
+            'location'    => $request->location ?: 'Lokasi Kurir',
+            'photo_url'   => $photoUrl,
         ]);
 
         // KIRIM EMAIL NOTIFIKASI KE CUSTOMER
@@ -485,15 +507,15 @@ class ShipmentController extends Controller
     public function adminDashboard()
     {
         $stats = [
-            'total' => Shipment::count(),
-            'revenue' => Shipment::where('status', '!=', 'cancelled')->sum('total_cost'),
-            'process' => Shipment::whereIn('status', ['created', 'paid', 'picked_up', 'in_transit'])->count(),
-            'delivered' => Shipment::where('status', 'delivered')->count(),
-            'pending' => Shipment::where('status', 'created')->count(),
-            'paid' => Shipment::where('status', 'paid')->count(),
-            'picked_up' => Shipment::where('status', 'picked_up')->count(),
-            'cancelled' => Shipment::where('status', 'cancelled')->count(),
-            'avg_rating' => number_format(Shipment::whereNotNull('rating')->avg('rating'), 1),
+            'total'         => Shipment::count(),
+            'revenue'       => Shipment::where('status', '!=', 'cancelled')->sum('total_cost'),
+            'process'       => Shipment::whereIn('status', ['created', 'paid', 'picked_up', 'in_transit'])->count(),
+            'delivered'     => Shipment::where('status', 'delivered')->count(),
+            'pending'       => Shipment::where('status', 'created')->count(),
+            'paid'          => Shipment::where('status', 'paid')->count(),
+            'picked_up'     => Shipment::where('status', 'picked_up')->count(),
+            'cancelled'     => Shipment::where('status', 'cancelled')->count(),
+            'avg_rating'    => number_format(Shipment::whereNotNull('rating')->avg('rating'), 1),
             'total_reviews' => Shipment::whereNotNull('rating')->count(),
         ];
 
@@ -541,9 +563,9 @@ class ShipmentController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|in:created,paid,picked_up,in_transit,delivered,cancelled',
+            'status'      => 'required|in:created,paid,picked_up,in_transit,delivered,cancelled',
             'description' => 'required|string',
-            'location' => 'nullable|string',
+            'location'    => 'nullable|string',
         ]);
 
         $shipment = Shipment::findOrFail($id);
@@ -551,9 +573,9 @@ class ShipmentController extends Controller
 
         ShipmentHistory::create([
             'shipment_id' => $shipment->id,
-            'status' => $request->status,
+            'status'      => $request->status,
             'description' => $request->description,
-            'location' => $request->location ?: 'Admin Panel',
+            'location'    => $request->location ?: 'Admin Panel',
         ]);
 
         return back()->with('success', 'Status pengiriman berhasil diupdate!');

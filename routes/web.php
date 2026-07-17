@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ShipmentController;
-use App\Http\Controllers\RateController;
-use App\Http\Controllers\BranchController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\MidtransWebhookController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RateController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ShipmentController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,10 +55,10 @@ Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
 // ==========================================
-// WEBHOOK MIDTRANS (HARUS DI LUAR MIDDLEWARE AUTH)
+// MIDTRANS WEBHOOK ROUTE (HARUS DI LUAR MIDDLEWARE AUTH)
 // ==========================================
-Route::post('/midtrans-webhook', [MidtransWebhookController::class, 'handle'])
-    ->name('midtrans.webhook');
+Route::post('/midtrans-notification', [MidtransWebhookController::class, 'handle'])
+    ->name('midtrans.notification');
 
 // ==========================================
 // PROTECTED ROUTES (HARUS LOGIN)
@@ -104,7 +104,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('shipments.store');
 
     Route::get('/payment/{id}', [ShipmentController::class, 'showPayment'])
-        ->name('payment.show');
+        ->name('shipments.payment');
     Route::get('/payment/success/{id}', [ShipmentController::class, 'paymentSuccess'])
         ->name('payment.success');
 

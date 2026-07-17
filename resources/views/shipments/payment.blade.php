@@ -1,99 +1,126 @@
 @extends('layouts.app')
 
+@section('title', 'Pembayaran - TirtaX')
+
 @section('content')
-    <div class="max-w-2xl mx-auto px-4 py-12" x-data="{ showError: {{ $error ? 'true' : 'false' }} }">
-        <!-- Error Alert -->
-        @if($error ?? false)
-            <div class="bg-red-50 border-l-4 border-red-500 rounded-r-xl p-5 mb-6 shadow-md" x-show="showError" x-transition>
-                <div class="flex items-start">
-                    <svg class="w-6 h-6 text-red-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-navy-50 to-sky-50">
+    <div class="max-w-2xl w-full">
+        <div class="bg-white rounded-2xl shadow-xl border border-sky-100 p-8">
+
+            {{-- Header --}}
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-navy-800 to-navy-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg class="w-8 h-8 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
-                    <div class="flex-1">
-                        <p class="font-semibold text-red-800">Pembayaran Dibatalkan</p>
-                        <p class="text-red-700 text-sm mt-1">{{ $error }}</p>
+                </div>
+                <h1 class="text-3xl font-bold text-navy-950 mb-2">Pembayaran Pengiriman</h1>
+                <p class="text-gray-600">Selesaikan pembayaran untuk pengiriman Anda</p>
+            </div>
+
+            {{-- Shipment Info --}}
+            <div class="bg-navy-50 rounded-xl p-6 mb-6 border-2 border-navy-200">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">No. Resi</p>
+                        <p class="text-lg font-bold text-navy-900">{{ $shipment->tracking_number }}</p>
                     </div>
-                    <button @click="showError = false" class="text-red-400 hover:text-red-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                            </path>
-                        </svg>
-                    </button>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Biaya</p>
+                        <p class="text-2xl font-bold text-accent-600">Rp {{ number_format($shipment->total_cost, 0, ',', '.') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Tujuan</p>
+                        <p class="font-semibold text-navy-900">{{ $shipment->destination_city }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Berat</p>
+                        <p class="font-semibold text-navy-900">{{ $shipment->weight }} Kg</p>
+                    </div>
                 </div>
             </div>
-        @endif
 
-        <div class="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
-            <div class="w-16 h-16 bg-tirtax-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-tirtax-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                    </path>
-                </svg>
+            {{-- Payment Button --}}
+            <div class="text-center mb-6">
+                <button id="pay-button"
+                        class="w-full py-4 bg-gradient-to-r from-navy-800 to-navy-900 text-white font-bold rounded-lg hover:from-navy-900 hover:to-navy-950 transition shadow-lg text-lg">
+                    Bayar Sekarang
+                </button>
+                <p class="text-xs text-gray-500 mt-2">
+                    Order ID: {{ $uniqueOrderId ?? $shipment->tracking_number }}
+                </p>
             </div>
 
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Pembayaran Pengiriman</h2>
-            <p class="text-gray-500 mb-6">No. Resi: <span
-                    class="font-semibold text-tirtax-600">{{ $shipment->tracking_number }}</span></p>
-
-            <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6 border border-gray-200">
-                <p class="text-sm text-gray-600 mb-1">Total Pembayaran</p>
-                <p class="text-3xl font-bold text-accent-600">Rp {{ number_format($shipment->total_cost, 0, ',', '.') }}</p>
+            {{-- Payment Info --}}
+            <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
+                <h3 class="font-bold text-navy-950 mb-3">💡 Informasi Pembayaran</h3>
+                <ul class="space-y-2 text-sm text-gray-700">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-sky-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Klik tombol "Bayar Sekarang" untuk melanjutkan</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-sky-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Pilih metode pembayaran yang tersedia (Transfer Bank, E-Wallet, dll)</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-sky-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Selesaikan pembayaran sesuai instruksi</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-sky-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Paket akan diproses setelah pembayaran dikonfirmasi</span>
+                    </li>
+                </ul>
             </div>
 
-            <button id="pay-button"
-                class="w-full bg-gradient-to-r from-accent-500 to-orange-600 text-white font-bold py-4 rounded-xl hover:from-orange-600 hover:to-orange-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                    </path>
-                </svg>
-                Bayar Sekarang
-            </button>
-
-            <a href="{{ route('shipments.my') }}"
-                class="inline-block mt-6 text-gray-500 hover:text-gray-700 font-medium transition">
-                ← Kembali ke Riwayat Pengiriman
-            </a>
+            {{-- Back Button --}}
+            <div class="text-center mt-6">
+                <a href="{{ route('shipments.my') }}" class="text-navy-700 hover:text-navy-900 font-semibold">
+                    ← Kembali ke Riwayat Pengiriman
+                </a>
+            </div>
         </div>
     </div>
+</div>
 
-    @if(config('services.midtrans.is_production'))
-        <script src="https://app.midtrans.com/snap/snap.js"
-            data-client-key="{{ config('services.midtrans.client_key') }}"></script>
-    @else
-        <script src="https://app.sandbox.midtrans.com/snap/snap.js"
-            data-client-key="{{ config('services.midtrans.client_key') }}"></script>
-    @endif
+{{-- Midtrans Snap JS --}}
+@if(config('midtrans.is_production'))
+    <script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+@else
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+@endif
 
-    <script>
-        let isProcessing = false;
+<script>
+document.getElementById('pay-button').addEventListener('click', function(e) {
+    e.preventDefault();
 
-        document.getElementById('pay-button').addEventListener('click', function () {
-            if (isProcessing) return;
-
-            isProcessing = true;
-            const btn = this;
-            const originalContent = btn.innerHTML;
-
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...`;
-            btn.disabled = true;
-
-            snap.pay('{{ $snapToken }}', {
-                onSuccess: function (result) {
-                    window.location.href = '{{ route("payment.success", $shipment->id) }}';
-                },
-                onPending: function (result) {
-                    window.location.href = '{{ route("shipments.my") }}?payment=pending';
-                },
-                onError: function (result) {
-                    window.location.href = '{{ route("payment.show", $shipment->id) }}?error=1';
-                },
-                onClose: function () {
-                    window.location.href = '{{ route("payment.show", $shipment->id) }}?error=1';
-                }
-            });
-        });
-    </script>
+    snap.pay('{{ $snapToken }}', {
+        onSuccess: function(result) {
+            // Redirect to success page
+            window.location.href = '{{ route("payment.success", $shipment->id) }}';
+        },
+        onPending: function(result) {
+            // Save pending transaction
+            window.location.href = '{{ route("shipments.my") }}';
+        },
+        onError: function(result) {
+            alert('Pembayaran gagal. Silakan coba lagi.');
+            console.error('Payment error:', result);
+        },
+        onClose: function() {
+            // User closed the popup
+            alert('Anda menutup popup pembayaran tanpa menyelesaikan transaksi.');
+        }
+    });
+});
+</script>
 @endsection

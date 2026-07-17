@@ -1,113 +1,118 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Shipment;
-use App\Models\ShipmentHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class MidtransWebhookController extends Controller
 {
+    /**
+     * Handle Midtrans notification webhook
+     */
     public function handle(Request $request)
     {
-        Log::info('Webhook received - Midtrans');
+        // Setup Midtrans configuration
+        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        \Midtrans\Config::$isSanitized  = config('midtrans.is_sanitized');
+        \Midtrans\Config::$is3ds        = config('midtrans.is_3ds');
 
         try {
-            \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
-            \Midtrans\Config::$isProduction = config('services.midtrans.is_production');
-            \Midtrans\Config::$isSanitized = true;
-            \Midtrans\Config::$is3ds = true;
+            // Get notification data
+            $notification = $request->all();
 
-            $notif = new \Midtrans\Notification();
+            // Log the notification for debugging
+            Log::info('Midtrans Notification Received', $notification);
 
-            $order_id = $notif->order_id;
-            $transaction_status = $notif->transaction_status;
-            $fraud_status = $notif->fraud_status;
+            // Get order_id from notification
+            $orderId = $notification['order_id'] ?? '';
 
-            Log::info('Webhook data', [
-                'order_id' => $order_id,
-                'status' => $transaction_status,
-                'fraud' => $fraud_status
+            // Extract base order_id (remove timestamp and hash suffix)
+            $baseOrderId = $this->extractBaseOrderId($orderId);
+
+            // Find shipment by base order_id (tracking_number)
+            $shipment = Shipment::where('tracking_number', $baseOrderId)->first();
+
+            if (! $shipment) {
+                Log::error('Shipment not found for order_id: ' . $orderId);
+                return response()->json(['status' => 'error', 'message' => 'Shipment not found'], 404);
+            }
+
+            // Update shipment status based on transaction status
+            $transactionStatus = $notification['transaction_status'] ?? '';
+            $fraudStatus       = $notification['fraud_status'] ?? '';
+
+            Log::info('Processing payment for order_id: ' . $orderId, [
+                'transaction_status' => $transactionStatus,
+                'fraud_status'       => $fraudStatus,
             ]);
 
-            // FIX: Ambil tracking_number dari custom_field1 jika order_id mengandung timestamp
-            // order_id format: TRX-20260610-VKNSGI-1718000000
-            // Kita perlu extract tracking_number aslinya
-            $trackingNumber = $this->extractTrackingNumber($order_id);
+            $newStatus     = $shipment->status;
+            $statusChanged = false;
 
-            // Cari shipment berdasarkan tracking_number
-            $shipment = Shipment::where('tracking_number', $trackingNumber)->first();
+            switch ($transactionStatus) {
+                case 'capture':
+                    if ($fraudStatus === 'accept') {
+                        $newStatus     = 'paid';
+                        $statusChanged = true;
+                    }
+                    break;
 
-            if (!$shipment) {
-                Log::warning('Shipment not found for order_id: ' . $order_id);
-                return response()->json(['message' => 'Shipment not found'], 404);
+                case 'settlement':
+                    $newStatus     = 'paid';
+                    $statusChanged = true;
+                    break;
+
+                case 'pending':
+                    $newStatus     = 'pending';
+                    $statusChanged = true;
+                    break;
+
+                case 'deny':
+                case 'expire':
+                case 'cancel':
+                    $newStatus     = 'created';
+                    $statusChanged = true;
+                    break;
             }
 
-            $newStatus = null;
-            $description = '';
-
-            // Logic status berdasarkan response Midtrans
-            if ($transaction_status == 'capture') {
-                if ($fraud_status == 'accept') {
-                    $newStatus = 'paid';
-                    $description = 'Pembayaran berhasil diverifikasi (Midtrans)';
-                }
-            } elseif ($transaction_status == 'settlement') {
-                $newStatus = 'paid';
-                $description = 'Pembayaran berhasil (Midtrans)';
-            } elseif ($transaction_status == 'pending') {
-                $description = 'Menunggu pembayaran (Midtrans)';
-            } elseif (in_array($transaction_status, ['deny', 'cancel', 'expire'])) {
-                // Jangan ubah status ke cancelled, biarkan user retry
-                $description = 'Pembayaran ' . $transaction_status . ' - User dapat retry';
-            }
-
-            // Update jika ada perubahan status
-            if ($newStatus && $shipment->status !== $newStatus) {
-                $shipment->update(['status' => $newStatus]);
-
-                ShipmentHistory::create([
-                    'shipment_id' => $shipment->id,
+            // Update shipment status if changed
+            if ($statusChanged && $shipment->status !== $newStatus) {
+                $shipment->update([
                     'status' => $newStatus,
-                    'description' => $description,
-                    'location' => 'Payment Gateway (Midtrans)',
                 ]);
 
                 Log::info('Shipment status updated', [
-                    'tracking_number' => $trackingNumber,
-                    'new_status' => $newStatus
+                    'order_id'   => $orderId,
+                    'old_status' => $shipment->status,
+                    'new_status' => $newStatus,
                 ]);
             }
 
-            return response()->json(['message' => 'Success'], 200);
+            return response()->json(['status' => 'success', 'message' => 'Webhook processed successfully']);
 
         } catch (\Exception $e) {
-            Log::error('Webhook error: ' . $e->getMessage());
-            return response()->json(['message' => 'Error'], 500);
+            Log::error('Midtrans Webhook Error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Extract tracking_number dari order_id yang mengandung timestamp
-     * Input: TRX-20260610-VKNSGI-1718000000
-     * Output: TRX-20260610-VKNSGI
+     * Extract base order_id from unique order_id
+     * Format: TRX-20260717-C9RZQN-1721234567-abc123 -> TRX-20260717-C9RZQN
      */
-    private function extractTrackingNumber($orderId)
+    private function extractBaseOrderId($orderId)
     {
-        // Format tracking_number: TRX-YYYYMMDD-XXXXXX (19 karakter)
-        // Format order_id: TRX-YYYYMMDD-XXXXXX-timestamp
-        // Kita ambil 19 karakter pertama jika mengandung timestamp
-
+        // Split by dash
         $parts = explode('-', $orderId);
 
-        // Jika ada lebih dari 3 bagian (ada timestamp di akhir)
-        if (count($parts) > 3) {
-            // Ambil 3 bagian pertama sebagai tracking_number
+        // If we have at least 3 parts, reconstruct the base order_id
+        if (count($parts) >= 3) {
+            // Take first 3 parts: TRX-20260717-C9RZQN
             return $parts[0] . '-' . $parts[1] . '-' . $parts[2];
         }
 
-        // Jika tidak ada timestamp, return as-is
         return $orderId;
     }
 }
