@@ -3,107 +3,133 @@
 @section('title', 'Install TirtaX App')
 
 @section('content')
-    <div
-        class="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 flex items-center justify-center px-4 py-12">
-        <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
-            {{-- Logo --}}
-            <div
-                class="w-24 h-24 bg-gradient-to-br from-navy-800 to-navy-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <svg class="w-12 h-12 text-sky-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gradient-to-br from-navy-50 to-sky-50">
+    <div class="max-w-2xl w-full">
+        <div class="bg-white rounded-2xl shadow-xl border border-sky-100 p-8">
+
+            {{-- Header --}}
+            <div class="text-center mb-8">
+                <div class="w-24 h-24 bg-gradient-to-br from-navy-800 to-navy-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg class="w-12 h-12 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-navy-950 mb-2">Install TirtaX App</h1>
+                <p class="text-gray-600">Jadikan TirtaX sebagai aplikasi di device Anda</p>
             </div>
 
-            <h1 class="text-3xl font-bold text-navy-950 mb-4">Install TirtaX</h1>
-            <p class="text-gray-600 mb-8">
-                Pasang aplikasi TirtaX di perangkat Anda untuk akses lebih cepat dan mudah, bahkan saat offline!
-            </p>
-
-            {{-- Features --}}
-            <div class="space-y-4 mb-8 text-left">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {{-- Benefits --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+                    <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-navy-950">Akses Offline</h3>
-                        <p class="text-sm text-gray-600">Lacak paket tanpa koneksi internet</p>
-                    </div>
+                    <h3 class="font-bold text-navy-950 mb-1">Akses Cepat</h3>
+                    <p class="text-sm text-gray-600">Buka aplikasi langsung dari home screen</p>
                 </div>
 
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+                    <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-navy-950">Lebih Cepat</h3>
-                        <p class="text-sm text-gray-600">Akses langsung dari home screen</p>
-                    </div>
+                    <h3 class="font-bold text-navy-950 mb-1">Mode Offline</h3>
+                    <p class="text-sm text-gray-600">Akses data yang sudah di-cache tanpa internet</p>
                 </div>
 
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                            </path>
+                <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+                    <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-navy-950">Notifikasi Real-time</h3>
-                        <p class="text-sm text-gray-600">Dapatkan update status pengiriman</p>
+                    <h3 class="font-bold text-navy-950 mb-1">Notifikasi</h3>
+                    <p class="text-sm text-gray-600">Terima update status pengiriman real-time</p>
+                </div>
+
+                <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+                    <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-bold text-navy-950 mb-1">Performa Cepat</h3>
+                    <p class="text-sm text-gray-600">Loading lebih cepat dengan caching</p>
+                </div>
+            </div>
+
+            {{-- Install Instructions --}}
+            <div class="bg-navy-50 rounded-xl p-6 mb-6 border-2 border-navy-200">
+                <h3 class="font-bold text-navy-950 mb-4">📱 Cara Install</h3>
+
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-navy-800 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="font-bold">1</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-navy-950">Chrome/Edge (Desktop)</p>
+                            <p class="text-sm text-gray-600">Klik icon install di address bar atau menu "Install TirtaX"</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-navy-800 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="font-bold">2</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-navy-950">Chrome (Android)</p>
+                            <p class="text-sm text-gray-600">Menu (⋮) → "Add to Home Screen" atau "Install App"</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-navy-800 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="font-bold">3</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-navy-950">Safari (iOS)</p>
+                            <p class="text-sm text-gray-600">Share button → "Add to Home Screen"</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Install Button --}}
-            <button onclick="installPWA()" id="installButton"
-                class="w-full py-4 bg-gradient-to-r from-navy-800 to-navy-900 text-white font-bold rounded-xl hover:from-navy-900 hover:to-navy-950 transition shadow-lg flex items-center justify-center gap-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                Install Aplikasi
+            <button id="install-btn" class="w-full py-3 bg-gradient-to-r from-navy-800 to-navy-900 text-white font-bold rounded-lg hover:from-navy-900 hover:to-navy-950 transition shadow-lg">
+                📲 Install TirtaX Sekarang
             </button>
 
-            <p class="text-xs text-gray-500 mt-4">
-                Atau gunakan menu browser Anda: <strong>⋮</strong> → "Add to Home Screen"
-            </p>
-
-            <a href="/" class="inline-block mt-6 text-navy-700 hover:text-navy-900 font-semibold text-sm">
+            {{-- Back Button --}}
+            <a href="/" class="block w-full py-3 border-2 border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition text-center mt-3">
                 ← Kembali ke Beranda
             </a>
         </div>
     </div>
+</div>
 
-    <script>
-        let deferredPrompt;
+<script>
+let deferredPrompt;
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('[PWA] Install prompt ready');
-        });
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+});
 
-        async function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`[PWA] User choice: ${outcome}`);
-                deferredPrompt = null;
-            } else {
-                alert('Fitur install tidak tersedia di browser ini. Silakan gunakan Chrome atau Edge.');
-            }
+document.getElementById('install-btn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            alert('TirtaX berhasil diinstall!');
         }
-
-        window.addEventListener('appinstalled', () => {
-            console.log('[PWA] App installed successfully');
-            alert('Aplikasi TirtaX berhasil diinstall! 🎉');
-        });
-    </script>
+        deferredPrompt = null;
+    } else {
+        alert('Silakan install manual melalui menu browser Anda.');
+    }
+});
+</script>
 @endsection

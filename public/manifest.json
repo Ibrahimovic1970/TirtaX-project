@@ -1,5 +1,5 @@
 {
-    "name": "TirtaX - Ekspedisi Online Terpercaya",
+    "name": "TirtaX - Ekspedisi Online",
     "short_name": "TirtaX",
     "description": "Platform ekspedisi digital terintegrasi. Kirim paket lebih cepat, aman, dan terpercaya.",
     "start_url": "/",
@@ -7,83 +7,94 @@
     "background_color": "#0f1d4a",
     "theme_color": "#0f1d4a",
     "orientation": "portrait-primary",
+    "categories": [
+        "business",
+        "productivity"
+    ],
     "icons": [
         {
             "src": "/icons/icon-72x72.png",
             "sizes": "72x72",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-96x96.png",
             "sizes": "96x96",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-128x128.png",
             "sizes": "128x128",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-144x144.png",
             "sizes": "144x144",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-152x152.png",
             "sizes": "152x152",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-192x192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-384x384.png",
             "sizes": "384x384",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "maskable any"
+            "purpose": "any maskable"
         }
-    ],
-    "categories": [
-        "business",
-        "productivity",
-        "utilities"
     ],
     "shortcuts": [
         {
             "name": "Kirim Paket",
             "short_name": "Kirim",
-            "description": "Buat pengiriman paket baru",
+            "description": "Buat pengiriman baru",
             "url": "/shipments/create",
             "icons": [
                 {
-                    "src": "/icons/icon-192x192.png",
-                    "sizes": "192x192"
+                    "src": "/icons/icon-96x96.png",
+                    "sizes": "96x96"
                 }
             ]
         },
         {
             "name": "Lacak Paket",
             "short_name": "Lacak",
-            "description": "Lacak status pengiriman",
-            "url": "/track",
+            "description": "Lacak pengiriman Anda",
+            "url": "/tracking/search",
             "icons": [
                 {
-                    "src": "/icons/icon-192x192.png",
-                    "sizes": "192x192"
+                    "src": "/icons/icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Riwayat",
+            "short_name": "Riwayat",
+            "description": "Lihat riwayat pengiriman",
+            "url": "/my-shipments",
+            "icons": [
+                {
+                    "src": "/icons/icon-96x96.png",
+                    "sizes": "96x96"
                 }
             ]
         }

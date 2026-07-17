@@ -1,123 +1,122 @@
+// TirtaX Service Worker
 const CACHE_NAME = 'tirtax-v1';
-const STATIC_CACHE = 'tirtax-static-v1';
-const DYNAMIC_CACHE = 'tirtax-dynamic-v1';
+const OFFLINE_URL = '/offline';
 
-// Assets yang akan di-cache (offline mode)
+// Resources to cache on install
 const STATIC_ASSETS = [
     '/',
     '/offline',
-    '/manifest.json',
+    '/css/app.css',
+    '/js/app.js',
+    'https://cdn.tailwindcss.com',
+    'https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js',
+    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
+    '/manifest.json'
 ];
 
-// Install Service Worker
+// Install event - cache static assets
 self.addEventListener('install', (event) => {
-    console.log('[Service Worker] Installing...');
     event.waitUntil(
-        caches.open(STATIC_CACHE)
-            .then((cache) => {
-                console.log('[Service Worker] Caching static assets');
-                return cache.addAll(STATIC_ASSETS);
-            })
-            .then(() => self.skipWaiting())
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('[SW] Caching static assets');
+            return cache.addAll(STATIC_ASSETS);
+        })
     );
+    self.skipWaiting();
 });
 
-// Activate Service Worker
+// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-    console.log('[Service Worker] Activating...');
     event.waitUntil(
-        caches.keys()
-            .then((keys) => {
-                return Promise.all(
-                    keys
-                        .filter((key) => key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
-                        .map((key) => caches.delete(key))
-                );
-            })
-            .then(() => self.clients.claim())
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('[SW] Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
     );
+    self.clients.claim();
 });
 
-// Fetch Strategy: Network First, Falling Back to Cache
+// Fetch event - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
-    if (event.request.method !== 'GET') return;
+    if (event.request.method !== 'GET') {
+        return;
+    }
 
-    // Skip chrome-extension and other non-http requests
-    if (!event.request.url.startsWith('http')) return;
+    // Skip API requests
+    if (event.request.url.includes('/api/')) {
+        return;
+    }
 
     event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
-                const fetchPromise = fetch(event.request)
-                    .then((networkResponse) => {
-                        // Update cache if network response is OK
-                        if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith('http')) {
-                            const responseClone = networkResponse.clone();
-                            caches.open(DYNAMIC_CACHE).then((cache) => {
-                                cache.put(event.request, responseClone);
-                            });
-                        }
-                        return networkResponse;
-                    })
-                    .catch(() => {
-                        // Return cached response if network fails
-                        return cachedResponse || caches.match('/offline');
+        fetch(event.request)
+            .then((response) => {
+                // Clone and cache successful responses
+                if (response && response.status === 200) {
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseClone);
                     });
-
-                // Return cached response immediately, then update cache
-                return cachedResponse || fetchPromise;
+                }
+                return response;
+            })
+            .catch(() => {
+                // Network failed, try cache
+                return caches.match(event.request).then((cachedResponse) => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    // If no cache, show offline page
+                    if (event.request.destination === 'document') {
+                        return caches.match(OFFLINE_URL);
+                    }
+                });
             })
     );
 });
 
-// Push Notification Handler
-self.addEventListener('push', (event) => {
-    console.log('[Service Worker] Push received:', event);
-
-    const options = {
-        body: event.data ? event.data.text() : 'Notifikasi baru dari TirtaX',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png',
-        vibrate: [200, 100, 200],
-        tag: 'tirtax-notification',
-        requireInteraction: true,
-        actions: [
-            { action: 'view', title: 'Lihat' },
-            { action: 'close', title: 'Tutup' }
-        ]
-    };
-
-    event.waitUntil(
-        self.registration.showNotification('TirtaX', options)
-    );
-});
-
-// Notification Click Handler
-self.addEventListener('notificationclick', (event) => {
-    console.log('[Service Worker] Notification click:', event);
-
-    event.notification.close();
-
-    if (event.action === 'view') {
-        event.waitUntil(
-            clients.openWindow('/')
-        );
-    }
-});
-
-// Background Sync Handler
+// Background sync for offline actions
 self.addEventListener('sync', (event) => {
-    console.log('[Service Worker] Background sync:', event.tag);
-
     if (event.tag === 'sync-shipments') {
         event.waitUntil(syncShipments());
     }
 });
 
-async function syncShipments() {
-    // Sync logic for offline shipments
-    console.log('[Service Worker] Syncing shipments...');
+function syncShipments() {
+    // Sync pending shipments when back online
+    console.log('[SW] Syncing shipments...');
 }
+
+// Push notifications
+self.addEventListener('push', (event) => {
+    const data = event.data ? event.data.json() : {};
+    const options = {
+        body: data.body || 'Update dari TirtaX',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-96x96.png',
+        vibrate: [100, 50, 100],
+        data: {
+            url: data.url || '/'
+        }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title || 'TirtaX', options)
+    );
+});
+
+// Notification click
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow(event.notification.data.url)
+    );
+});
