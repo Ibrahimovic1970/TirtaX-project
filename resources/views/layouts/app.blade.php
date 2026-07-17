@@ -300,17 +300,43 @@
         </div>
     </footer>
 
-    {{-- PWA Service Worker Registration --}}
+    {{-- PWA Service Worker Registration - Optimized --}}
     <script>
+        // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/sw.js?v=2')
                     .then((registration) => {
-                        console.log('[PWA] Service Worker registered:', registration);
+                        console.log('[PWA] Service Worker registered:', registration.scope);
+
+                        // Pre-cache important pages
+                        const importantPages = [
+                            '/',
+                            '/my-shipments',
+                            '/customer/dashboard'
+                        ];
+
+                        // Cache important pages in background
+                        importantPages.forEach(url => {
+                            fetch(url).then(response => {
+                                if (response.ok) {
+                                    return caches.open('tirtax-v2').then(cache => {
+                                        return cache.put(url, response);
+                                    });
+                                }
+                            }).catch(() => {
+                                // Ignore errors
+                            });
+                        });
                     })
                     .catch((error) => {
                         console.log('[PWA] Service Worker registration failed:', error);
                     });
+            });
+
+            // Listen for service worker updates
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('[PWA] Service Worker updated');
             });
         }
 
@@ -319,6 +345,18 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            console.log('[PWA] Install prompt available');
+        });
+
+        // Online/Offline detection
+        window.addEventListener('online', () => {
+            console.log('[PWA] Back online');
+            document.body.classList.remove('offline-mode');
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('[PWA] Going offline');
+            document.body.classList.add('offline-mode');
         });
     </script>
 

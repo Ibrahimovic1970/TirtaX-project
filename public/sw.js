@@ -1,26 +1,22 @@
-// TirtaX Service Worker
-const CACHE_NAME = 'tirtax-v1';
+// TirtaX Service Worker - Optimized for Offline
+const CACHE_NAME = 'tirtax-v2';
 const OFFLINE_URL = '/offline';
 
-// Resources to cache on install
+// Resources to cache on install (pre-cache)
 const STATIC_ASSETS = [
     '/',
     '/offline',
-    '/css/app.css',
-    '/js/app.js',
-    'https://cdn.tailwindcss.com',
-    'https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
+    '/manifest.json',
     '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png',
-    '/manifest.json'
+    '/icons/icon-512x512.png'
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
+    console.log('[SW] Installing...');
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[SW] Caching static assets');
+            console.log('[SW] Pre-caching static assets');
             return cache.addAll(STATIC_ASSETS);
         })
     );
@@ -29,6 +25,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
+    console.log('[SW] Activating...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -44,42 +41,70 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch event - network first, fallback to cache
+// Fetch event - CACHE FIRST strategy (lebih cepat saat offline)
 self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') {
         return;
     }
 
-    // Skip API requests
-    if (event.request.url.includes('/api/')) {
+    // Skip API requests (harus selalu online)
+    if (event.request.url.includes('/api/') ||
+        event.request.url.includes('/midtrans-')) {
         return;
     }
 
+    // Skip admin routes (butuh data real-time)
+    if (event.request.url.includes('/admin/')) {
+        return;
+    }
+
+    // Cache First Strategy - CARI CACHE DULU, baru network
     event.respondWith(
-        fetch(event.request)
-            .then((response) => {
-                // Clone and cache successful responses
-                if (response && response.status === 200) {
-                    const responseClone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseClone);
-                    });
-                }
-                return response;
-            })
-            .catch(() => {
-                // Network failed, try cache
-                return caches.match(event.request).then((cachedResponse) => {
-                    if (cachedResponse) {
-                        return cachedResponse;
+        caches.match(event.request).then((cachedResponse) => {
+            // Jika ada di cache, langsung return (CEPAT!)
+            if (cachedResponse) {
+                console.log('[SW] Cache hit:', event.request.url);
+
+                // Update cache di background (stale-while-revalidate)
+                fetch(event.request).then((response) => {
+                    if (response && response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
                     }
-                    // If no cache, show offline page
+                }).catch(() => {
+                    // Ignore network errors
+                });
+
+                return cachedResponse;
+            }
+
+            // Jika tidak ada di cache, fetch dari network
+            console.log('[SW] Cache miss, fetching from network:', event.request.url);
+            return fetch(event.request)
+                .then((response) => {
+                    // Cache successful responses
+                    if (response && response.status === 200) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    // Network failed, show offline page
                     if (event.request.destination === 'document') {
                         return caches.match(OFFLINE_URL);
                     }
+                    return new Response('Offline', {
+                        status: 503,
+                        statusText: 'Service Unavailable'
+                    });
                 });
-            })
+        })
     );
 });
 
@@ -91,7 +116,6 @@ self.addEventListener('sync', (event) => {
 });
 
 function syncShipments() {
-    // Sync pending shipments when back online
     console.log('[SW] Syncing shipments...');
 }
 
