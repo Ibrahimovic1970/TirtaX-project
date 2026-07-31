@@ -111,26 +111,13 @@
                     </label>
                 </div>
 
-                {{-- Google reCAPTCHA v2 --}}
-                <div>
-                    <label class="block text-sm font-medium text-navy-900 mb-2">
-                        Verifikasi Keamanan <span class="text-red-500">*</span>
-                    </label>
-                    <div class="flex justify-center py-2">
-                        <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
-                    </div>
-                    @error('g-recaptcha-response')
-                        <p class="text-red-500 text-xs mt-1 text-center">{{ $message }}</p>
-                    @enderror
-                    @if($errors->has('captcha'))
-                        <p class="text-red-500 text-xs mt-1 text-center">{{ $errors->first('captcha') }}</p>
-                    @endif
-                    <p class="text-xs text-gray-500 mt-1 text-center">
-                        @if(config('services.recaptcha.site_key') === '6LeIxAsTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
-                            <span class="text-yellow-600">⚠️ Menggunakan TEST KEYS untuk development</span>
-                        @endif
-                    </p>
+                {{-- reCAPTCHA --}}
+                <div class="flex justify-center mb-2">
+                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
                 </div>
+                @error('g-recaptcha-response')
+                    <p class="text-red-500 text-xs text-center -mt-1 mb-2">{{ $message }}</p>
+                @enderror
 
                 {{-- Submit Button --}}
                 <button type="submit"
@@ -138,6 +125,7 @@
                     Daftar Sekarang
                 </button>
             </form>
+        </div>
 
         {{-- Footer Info --}}
         <div class="text-center mt-6">
@@ -149,7 +137,13 @@
     </div>
 </div>
 
-{{-- Google reCAPTCHA Script --}}
+{{-- reCAPTCHA Script --}}
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
+<style>
+    .g-recaptcha {
+        transform: scale(0.95);
+        transform-origin: center;
+    }
+</style>
 @endsection

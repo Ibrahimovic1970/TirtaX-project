@@ -59,35 +59,27 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // Validasi input
+        // Validasi input DENGAN validasi reCAPTCHA inline (tanpa file Rule terpisah)
         $validated = $request->validate([
             'name'                 => ['required', 'string', 'max:255'],
             'email'                => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password'             => ['required', 'string', 'min:8', 'confirmed'],
             'terms'                => ['accepted'],
-            'g-recaptcha-response' => ['required', function ($attribute, $value, $fail) {
-                // Verify reCAPTCHA
-                $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-                    'secret'   => config('services.recaptcha.secret_key'),
-                    'response' => $value,
-                    'remoteip' => request()->ip(),
-                ]);
+            'g-recaptcha-response' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                        'secret'   => config('services.recaptcha.secret_key'),
+                        'response' => $value,
+                    ]);
 
-                if (! $response->successful()) {
-                    $fail('Verifikasi reCAPTCHA gagal. Silakan coba lagi.');
-                    return;
-                }
+                    $result = $response->json();
 
-                $result = $response->json();
-
-                if (! $result['success']) {
-                    $fail('Verifikasi reCAPTCHA gagal. Silakan coba lagi.');
-                    return;
-                }
-
-                // Untuk production, check score (untuk reCAPTCHA v3)
-                // Untuk reCAPTCHA v2 checkbox, success sudah cukup
-            }],
+                    if (! ($result['success'] ?? false)) {
+                        $fail('Verifikasi reCAPTCHA gagal. Silakan coba lagi.');
+                    }
+                },
+            ],
         ], [
             'name.required'                 => 'Nama lengkap harus diisi.',
             'email.required'                => 'Email harus diisi.',
@@ -133,7 +125,6 @@ class AuthController extends Controller
         ]);
 
         // Send password reset email logic here
-        // For now, just return success
         return back()->with('success', 'Link reset password telah dikirim ke email Anda.');
     }
 
